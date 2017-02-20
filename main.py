@@ -1,11 +1,11 @@
 #Imports
-import ast, turtle, time, math
+import ast, math
 
 #Open File
 def calc_dist(my_list):
     my_sum = 0
-    for item in my_list:
-        distance = math.sqrt( ((item[0][0]-item[1][0])**2)+((item[0][1]-item[1][1])**2) )
+    for i in range(len(my_list)-1):
+        distance = math.sqrt( ((my_list[i][0]-my_list[i+1][0])**2)+((my_list[i][1]-my_list[i+1][1])**2) )
         my_sum = my_sum + distance
     return my_sum
 
@@ -58,14 +58,18 @@ def main():
             paths.append(tempList)
             print(tempList)
 
-        for i in range(len(paths)):
-            for j in range(len(paths)):
-                if i==j:
-                    print(0)
-                else:
-                    # print paths[i][j]
-                    print(calc_dist(paths[i][j]))
         # Base case
         # if len(obstacles)==0:
+        
+
+
+
+        # for i in range(len(paths)):
+        #     for j in range(len(paths)):
+        #         if i==j:
+        #             print(0)
+        #         else:
+        #             # print paths[i][j]
+        #             print(calc_dist(paths[i][j]))
 
 main()
