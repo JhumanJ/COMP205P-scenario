@@ -7,7 +7,7 @@ def calc_dist(my_list):
     for item in my_list:
         distance = math.sqrt( ((item[0][0]-item[1][0])**2)+((item[0][1]-item[1][1])**2) )
         my_sum = my_sum + distance
-    return distance
+    return my_sum
 
 def main():
     f = open('robots.mat.txt','r')
@@ -51,13 +51,20 @@ def main():
             tempList = []
             for j in range(0,len(points)):
                 if i == j:
-                    tempList.append(())
+                    tempList.append([()])
                 else:
                     tempTuple = [points[i],points[j]]
                     tempList.append(tempTuple)
             paths.append(tempList)
             print(tempList)
 
+        for i in range(len(paths)):
+            for j in range(len(paths)):
+                if i==j:
+                    print(0)
+                else:
+                    # print paths[i][j]
+                    print(calc_dist(paths[i][j]))
         # Base case
         # if len(obstacles)==0:
 
