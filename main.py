@@ -1,5 +1,7 @@
 #Imports
 import ast, math
+from openpyxl import Workbook
+
 
 #Open File
 def calc_dist(my_list):
@@ -11,7 +13,14 @@ def calc_dist(my_list):
 
 def main():
     f = open('robots.mat.txt','r')
-    for i in range (1,2):
+
+    # Excel code
+    # column_number = 1
+    # wb = Workbook()
+    # ws = wb.active
+    # ws.title = "Data"
+
+    for i in range (1,31):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -39,9 +48,9 @@ def main():
 
         # Display info
         print('\nGraph '+str(i)+':')
-        print("Points ("+str(len(points))+"): " + str(points))
-        print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
-        print("MATRIX:\n")
+        # print("Points ("+str(len(points))+"): " + str(points))
+        # print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
+        # print("MATRIX:\n")
 
 
         # Matrix of paths
@@ -56,20 +65,38 @@ def main():
                     tempTuple = [points[i],points[j]]
                     tempList.append(tempTuple)
             paths.append(tempList)
-            print(tempList)
+            # print(tempList)
 
         # Base case
         # if len(obstacles)==0:
-        
 
-
-
-        # for i in range(len(paths)):
-        #     for j in range(len(paths)):
-        #         if i==j:
-        #             print(0)
-        #         else:
-        #             # print paths[i][j]
-        #             print(calc_dist(paths[i][j]))
+    #     Excel Code
+    #     my_index = 1
+    #     ws.cell(row=my_index, column=column_number, value="Point X")
+    #     ws.cell(row=my_index, column=column_number+1, value="Point Y")
+    #     my_index = my_index + 1
+    #
+    #     for point in points:
+    #         ws.cell(row=my_index, column=column_number, value=float(point[0]))
+    #         ws.cell(row=my_index, column=column_number+1, value=float(point[1]))
+    #         my_index = my_index + 1
+    #
+    #     ws.cell(row=my_index, column=column_number, value="Obstacles X")
+    #     ws.cell(row=my_index, column=column_number+1, value="Obstacles Y")
+    #     my_index = my_index + 1
+    #
+    #     for item in obstacles:
+    #         for point in item:
+    #             ws.cell(row=my_index, column=column_number, value=float(point[0]))
+    #             ws.cell(row=my_index, column=column_number+1, value=float(point[1]))
+    #
+    #             my_index = my_index + 1
+    #
+    #         my_index = my_index + 1
+    #
+    #     column_number = column_number + 2
+    #
+    # Excel code
+    # wb.save('data.xlsx')
 
 main()
