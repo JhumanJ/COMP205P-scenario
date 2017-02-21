@@ -1,7 +1,12 @@
 #Imports
 import ast, math
-from openpyxl import Workbook
+import matplotlib.pyplot as plt
+import itertools
 
+# from openpyxl import Workbook
+
+
+# -------------------- ROBOT PATH GENERATION -----------------------
 
 #Open File
 def calc_dist(my_list):
@@ -77,6 +82,117 @@ def algorithm(matrix):
 
 	return listOfPaths
 
+# --------------------------- GENERATE MATRIX ------------
+
+def onSegment((xi,yi),(xj,yj),(xk,yk)):
+    return  (xi <= xk or xj <= xk) and (xk <= xi or xk <= xj) and (yi <= yk or yj <= yk) and (yk <= yi or yk <= yj)
+def det(a, b):
+    return a[0] * b[1] - a[1] * b[0]
+def line_intersection(line1, line2):
+    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1]) #Typo was here
+
+    div = det(xdiff, ydiff)
+    if div == 0:
+       return False
+    else:
+        d = (det(*line1), det(*line2))
+        x = det(d, xdiff) / div
+        y = det(d, ydiff) / div
+
+        if ((line1[0][0]<=x<=line1[1][0] or line1[1][0]<=x<=line1[0][0]) and (line2[0][0]<=x<=line2[1][0] or line2[1][0]<=x<=line2[0][0]) and (line1[1][1]<=y<=line1[0][1] or line1[0][1]<=y<=line1[1][1]) and (line2[0][1]<=y<=line2[1][1] or line2[1][1]<=y<=line2[0][1])):
+            return (x,y)
+        else:
+            return False
+
+def next_obstacle_point(point,obstacle):
+    if not point in obstacle:
+        return False
+
+    index = obstacle.index(point)
+    if index == len(obstacle):
+        index = 0
+    else:
+        index = index + 1
+    return obstacle[index]
+
+def checkPath(path, obstacles):
+
+    start_point = path[len(path)-2]
+    destination_point = path[len(path)-1]
+
+
+    # Todo vars
+    closest_inter_point = ()
+    intersect_segment = ()
+    intersection_obstacle = []
+
+    #init todo var
+    for obstacle in obstacles:
+        for i in range(0,len(obstacle)-1):
+            my_intersect = line_intersection((start_point,destination_point),(obstacle[i],obstacle[i+1]))
+            if my_intersect != False:
+                if closest_inter_point == ():
+                    closest_inter_point = my_intersect
+                    intersect_segment = (obstacle[i],obstacle[i+1])
+                    intersection_obstacle = obstacle
+                elif calc_dist([start_point,closest_inter_point])>calc_dist([start_point,my_intersect]):
+                    closest_inter_point = my_intersect
+                    intersect_segment = (obstacle[i],obstacle[i+1])
+                    intersection_obstacle = obstacle
+            # print("Intersection of "+str(start_point)+str(destination_point)+" "+str(obstacle[i])+str(obstacle[i+1])+" -> "+str(my_intersect))
+        my_intersect = line_intersection((start_point,destination_point),(obstacle[0],obstacle[len(obstacle)-1]))
+        if my_intersect != False:
+            if closest_inter_point == ():
+                closest_inter_point = my_intersect
+                intersect_segment = (obstacle[i],obstacle[i+1])
+                intersection_obstacle = obstacle
+            elif calc_dist([start_point,closest_inter_point])>calc_dist([start_point,my_intersect]):
+                closest_inter_point = my_intersect
+                intersect_segment = (obstacle[i],obstacle[i+1])
+                intersection_obstacle = obstacle
+        # print("Intersection of "+str(start_point)+str(destination_point)+" "+str(obstacle[0])+str(obstacle[len(obstacle)-1])+" -> "+str(my_intersect))
+        # print("---")
+
+    if intersection_obstacle != []:
+        #inersection with an obstacle
+
+        #find closest point of obstacle
+        closest_point_of_obstacle = ()
+        for point in intersection_obstacle:
+            if closest_point_of_obstacle == ():
+                closest_point_of_obstacle = point
+            elif calc_dist([start_point,closest_point_of_obstacle])>calc_dist([start_point,point]):
+                closest_point_of_obstacle = point
+
+        new_path = path
+        new_path.insert(len(new_path)-1,closest_point_of_obstacle)
+
+
+        # Si il y a une intersection entre le dernier segment et l'obstacle continuer de contourner
+        still_inter = True
+        while still_inter:
+            still_inter = False
+            for i in range(0,len(intersection_obstacle)-2):
+
+                if line_intersection((new_path[len(new_path)-2],new_path[len(new_path)-1]),(intersection_obstacle[i],intersection_obstacle[i+1])) != False:
+                    still_inter = True
+                    print(str(intersection_obstacle[i])+" "+str(intersection_obstacle[i+1]))
+
+
+            if line_intersection((new_path[len(new_path)-2],new_path[len(new_path)-1]),(intersection_obstacle[0],intersection_obstacle[len(intersection_obstacle)-1])) != False:
+                still_inter = True
+                print(str(intersection_obstacle[i])+" "+str(intersection_obstacle[i+1]))
+
+
+            new_path.insert(len(new_path)-1,next_obstacle_point(closest_point_of_obstacle,intersection_obstacle))
+
+        return new_path
+
+    return path
+
+    #  /find closest Intersection
+
 def main():
     f = open('robots.mat.txt','r')
 
@@ -86,7 +202,7 @@ def main():
     # ws = wb.active
     # ws.title = "Data"
 
-    for i in range (1,2):
+    for problem in range (1,31):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -113,10 +229,10 @@ def main():
 
 
         # Display info
-        # print('\nGraph '+str(i)+':')
-        # print("Points ("+str(len(points))+"): " + str(points))
-        # print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
-        # print("MATRIX:\n")
+        print('\nGraph '+str(problem)+':')
+        print("Points ("+str(len(points))+"): " + str(points))
+        print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
+        print("MATRIX:\n")
 
 
         # Matrix of paths
@@ -131,42 +247,36 @@ def main():
                     tempTuple = [points[i],points[j]]
                     tempList.append(tempTuple)
             paths.append(tempList)
-            # print(tempList)
 
-        # print(str(paths))
-        # Base case
-        # if len(obstacles)==0:
+        # Intersections
+        for index_i in range(0,len(points)):
+            for index_j in range(index_i,len(points)):
+                if index_i != index_j:
+                    # For this path find closest intersection
+                    # print( checkPath(paths[index_i][index_j],obstacles))
+                    pass
 
-        print(str(algorithm(paths)))
+        #Display
+        fig=plt.figure()
+        ax=fig.add_subplot(111)
 
+        # ----Obstacles
+        if len(obstacles)>0:
+            for obstacle in obstacles:
+                x=[]
+                y=[]
+                for i in range(0,len(obstacle)):
+                    x.append(obstacle[i][0])
+                    y.append(obstacle[i][1])
+                x.append(obstacle[0][0])
+                y.append(obstacle[0][1])
+                plt.plot(x,y)
 
-    #     Excel Code
-    #     my_index = 1
-    #     ws.cell(row=my_index, column=column_number, value="Point X")
-    #     ws.cell(row=my_index, column=column_number+1, value="Point Y")
-    #     my_index = my_index + 1
-    #
-    #     for point in points:
-    #         ws.cell(row=my_index, column=column_number, value=float(point[0]))
-    #         ws.cell(row=my_index, column=column_number+1, value=float(point[1]))
-    #         my_index = my_index + 1
-    #
-    #     ws.cell(row=my_index, column=column_number, value="Obstacles X")
-    #     ws.cell(row=my_index, column=column_number+1, value="Obstacles Y")
-    #     my_index = my_index + 1
-    #
-    #     for item in obstacles:
-    #         for point in item:
-    #             ws.cell(row=my_index, column=column_number, value=float(point[0]))
-    #             ws.cell(row=my_index, column=column_number+1, value=float(point[1]))
-    #
-    #             my_index = my_index + 1
-    #
-    #         my_index = my_index + 1
-    #
-    #     column_number = column_number + 2
-    #
-    # Excel code
-    # wb.save('data.xlsx')
+        # ----Points
+        for point in points:
+            plt.scatter(point[0],point[1])
+        plt.title("Graph "+str(problem))
+
+        plt.show()
 
 main()
