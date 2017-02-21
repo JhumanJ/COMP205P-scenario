@@ -11,6 +11,69 @@ def calc_dist(my_list):
         my_sum = my_sum + distance
     return my_sum
 
+def checkInPath(listOfAwakenedRobots, position, length):
+	for k in range(length):
+		if listOfAwakenedRobots[k] != -1:
+	    	if position == k:
+	        	return True
+	return False
+
+
+def addToSolution(listOfPaths, shortestEdge, botNumber):
+
+	newList = []
+
+	for i in range(len(listOfPaths[botNumber])-1):
+		newList[i] = listOfPaths[botNumber][i]
+
+	for i in range(len(listOfPaths[botNumber])-1,len(listOfPaths[botNumber])-1 + len(shortestEdge)):
+		newList[i] = shortestEdge[i-len(listOfPaths[botNumber])-1]
+
+	return newList
+
+
+def algorithm(matrix):
+
+	# Array that stores the indexes of the points of the awaken robots 
+	listOfAwakenedRobots = [len(paths)]
+	
+	# list of the solutions 
+	listOfPaths = []
+
+	# All points are initiated to index 
+	for i in range(len(paths)):
+	 	listOfAwakenedRobots[i] = -1;
+
+	listOfAwakenedRobots[0] = 0;
+
+    for row in range(len(paths)-1): #It covers all the nodes in the graph not counting the return to start node
+
+        shortestEdge = [(0,0)(0,0)]
+        botNumber = -1
+
+        for awakenBot in range(listOfAwakenedRobots):
+
+        	if listOfAwakenedRobots[awakenBot] != -1:
+
+        		currentNode = listOfAwakenedRobots[awakenBot]
+        
+		      	for column in range(len(paths)):    #It looks at all unvisited point from the current point it is visiting
+
+		            if checkInPath(listOfAwakenedRobots, column, len(paths)):
+
+			            if shortestEdge == [(0,0)(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
+			                shortestEdge = matrix[currentNode][column]
+			                botNumber = awakenBot
+
+			            if calc_dist(matrix[currentNode][j]) < calc_dist(shortestEdge): #It checks which edge is the shortest
+			                shortestEdge = matrix[currentNode][column]
+			                botNumber = awakenBot 
+
+		listOfAwakenedRobots[botNumber] = 
+	    listOfPaths = addToSolution(listOfPaths, shortestEdge, botNumber)
+
+	return listOfPaths
+
 def main():
     f = open('robots.mat.txt','r')
 
