@@ -12,10 +12,10 @@ def calc_dist(my_list):
     return my_sum
 
 def checkInPath(listOfAwakenedRobots, position, length):
-	for k in range(length):
-		if listOfAwakenedRobots[k] != -1:
-	    	if position == k:
-	        	return True
+    for k in range(length):
+        if listOfAwakenedRobots[k] != -1:
+            if position == k:
+                return True
 	return False
 
 
@@ -34,43 +34,46 @@ def addToSolution(listOfPaths, shortestEdge, botNumber):
 
 def algorithm(matrix):
 
-	# Array that stores the indexes of the points of the awaken robots 
-	listOfAwakenedRobots = [len(paths)]
-	
-	# list of the solutions 
-	listOfPaths = []
+    paths = matrix
+	# Array that stores the indexes of the points of the awaken robots
+    listOfAwakenedRobots = [len(paths)]
 
-	# All points are initiated to index 
-	for i in range(len(paths)):
-	 	listOfAwakenedRobots[i] = -1;
+	# list of the solutions
+    listOfPaths = []
 
-	listOfAwakenedRobots[0] = 0;
+	# All points are initiated to index
+    for i in range(len(paths)):
+        listOfAwakenedRobots[i] = -1
+
+    listOfAwakenedRobots[0] = 0
 
     for row in range(len(paths)-1): #It covers all the nodes in the graph not counting the return to start node
 
         shortestEdge = [(0,0)(0,0)]
         botNumber = -1
+        my_from = -1
 
         for awakenBot in range(listOfAwakenedRobots):
+            if listOfAwakenedRobots[awakenBot] != -1:
+                currentNode = listOfAwakenedRobots[awakenBot]
 
-        	if listOfAwakenedRobots[awakenBot] != -1:
+                for column in range(len(paths)):    #It looks at all unvisited point from the current point it is visiting
 
-        		currentNode = listOfAwakenedRobots[awakenBot]
-        
-		      	for column in range(len(paths)):    #It looks at all unvisited point from the current point it is visiting
+	               if checkInPath(listOfAwakenedRobots, column, len(paths)):
 
-		            if checkInPath(listOfAwakenedRobots, column, len(paths)):
+                        if shortestEdge == [(0,0)(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
+                            shortestEdge = matrix[currentNode][column]
+                            botNumber = awakenBot
+                            my_from = column
 
-			            if shortestEdge == [(0,0)(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
-			                shortestEdge = matrix[currentNode][column]
-			                botNumber = awakenBot
+                        if calc_dist(matrix[currentNode][j]) < calc_dist(shortestEdge): #It checks which edge is the shortest
+                            shortestEdge = matrix[currentNode][column]
+                            botNumber = awakenBot
+                            my_from = column
 
-			            if calc_dist(matrix[currentNode][j]) < calc_dist(shortestEdge): #It checks which edge is the shortest
-			                shortestEdge = matrix[currentNode][column]
-			                botNumber = awakenBot 
-
-		listOfAwakenedRobots[botNumber] = 
-	    listOfPaths = addToSolution(listOfPaths, shortestEdge, botNumber)
+		listOfAwakenedRobots[botNumber] = botNumber
+        listOfAwakenedRobots[my_from] = botNumber
+        listOfPaths = addToSolution(listOfPaths, shortestEdge, botNumber)
 
 	return listOfPaths
 
@@ -83,7 +86,7 @@ def main():
     # ws = wb.active
     # ws.title = "Data"
 
-    for i in range (1,31):
+    for i in range (1,2):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -110,7 +113,7 @@ def main():
 
 
         # Display info
-        print('\nGraph '+str(i)+':')
+        # print('\nGraph '+str(i)+':')
         # print("Points ("+str(len(points))+"): " + str(points))
         # print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
         # print("MATRIX:\n")
@@ -130,8 +133,12 @@ def main():
             paths.append(tempList)
             # print(tempList)
 
+        # print(str(paths))
         # Base case
         # if len(obstacles)==0:
+
+        print(str(algorithm(paths)))
+
 
     #     Excel Code
     #     my_index = 1
