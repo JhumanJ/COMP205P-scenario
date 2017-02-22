@@ -13,66 +13,71 @@ def calc_dist(my_list):
         my_sum = my_sum + distance
     return my_sum
 
-def addToSolution(listOfPaths, shortestEdge):
+def checkInPath(listOfAwakenedRobots, position, length):
+    for k in range(length):
+        if listOfAwakenedRobots[k] != -1:
+            if position == k:
+                return True
+	return False
 
-    newList = []
-    num = len(listOfPaths)-1
 
-    for i in range(num):
-        newList.append(listOfPaths[i])
+def addToSolution(listOfPaths, shortestEdge, botNumber):
 
-    for i in range(num, num + len(shortestEdge)):
-        newList.append(shortestEdge[i-num])
+	newList = []
 
-    return newList
+	for i in range(len(listOfPaths[botNumber])-1):
+		newList[i] = listOfPaths[botNumber][i]
+
+	for i in range(len(listOfPaths[botNumber])-1,len(listOfPaths[botNumber])-1 + len(shortestEdge)):
+		newList[i] = shortestEdge[i-len(listOfPaths[botNumber])-1]
+
+	return newList
 
 
 def algorithm(matrix):
 
     paths = matrix
-    # Array that stores the indexes of the points of the awaken robots
-    listOfAwakenedRobots = []
+	# Array that stores the indexes of the points of the awaken robots
+    listOfAwakenedRobots = [len(paths)]
 
-    # list of the solutions
-    listOfPaths = [[]]
+	# list of the solutions
+    listOfPaths = []
 
-    # All points are initiated to index
+	# All points are initiated to index
     for i in range(len(paths)):
-        listOfAwakenedRobots.append(-1)
+        listOfAwakenedRobots[i] = -1
 
     listOfAwakenedRobots[0] = 0
 
     for row in range(len(paths)-1): #It covers all the nodes in the graph not counting the return to start node
 
-        shortestEdge = [(0,0),(0,0)]
+        shortestEdge = [(0,0)(0,0)]
         botNumber = -1
         my_from = -1
 
-        for awakenBot in range(len(listOfAwakenedRobots)):
-            
+        for awakenBot in range(listOfAwakenedRobots):
             if listOfAwakenedRobots[awakenBot] != -1:
-                
                 currentNode = listOfAwakenedRobots[awakenBot]
 
-                for column in range(len(paths)):
+                for column in range(len(paths)):    #It looks at all unvisited point from the current point it is visiting
 
-                    if listOfAwakenedRobots[column] != -1:
+	               if checkInPath(listOfAwakenedRobots, column, len(paths)):
 
-                        if shortestEdge == [(0,0),(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
+                        if shortestEdge == [(0,0)(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
                             shortestEdge = matrix[currentNode][column]
                             botNumber = awakenBot
                             my_from = column
 
-                        if calc_dist(matrix[currentNode][column]) < calc_dist(shortestEdge): #It checks which edge is the shortest
+                        if calc_dist(matrix[currentNode][j]) < calc_dist(shortestEdge): #It checks which edge is the shortest
                             shortestEdge = matrix[currentNode][column]
                             botNumber = awakenBot
                             my_from = column
 
-        listOfAwakenedRobots[botNumber] = my_from
-        listOfAwakenedRobots[my_from] = my_from
-        listOfPaths[botNumber] = addToSolution(listOfPaths[botNumber], shortestEdge)
+		listOfAwakenedRobots[botNumber] = botNumber
+        listOfAwakenedRobots[my_from] = botNumber
+        listOfPaths = addToSolution(listOfPaths, shortestEdge, botNumber)
 
-    return listOfPaths
+	return listOfPaths
 
 # from openpyxl import Workbook
 
@@ -153,17 +158,18 @@ def min_intersect(x,y,obstacle):
             count = len(obstacle)-1
 
     return [min_point,count]
-#return shortest distance to obstacle
-def dist_to_obstacle(point,obstacle):
-    distance = 0
-    for i in range(0,len(obstacle)-1):
-        dist = calc_dist([point,obstacle[i]])
-        if distance==0:
-            distance=dist
-        elif dist<distance:
-            distance=dist
 
-    return distance
+#return shortest distance to obstacle
+# def dist_to_obstacle(point,destination,obstacle):
+#     distance = 0
+#     # my_intersect =
+#         dist = calc_dist([point,obstacle[i]])
+#         if distance==0:
+#             distance=dist
+#         elif dist<distance:
+#             distance=dist
+#
+#     return distance
 
 #Check if path between point and obstacle is doable
 def can_reach_obstacle_point(point,obstacle_point,obstacle):
@@ -209,15 +215,18 @@ def checkPath(path, obstacles):
         if (does_intersect(start_point,destination_point,obstacle)):
             if obstacle_to_avoid == []:
                 obstacle_to_avoid = obstacle
-                obstacle_dist = dist_to_obstacle(start_point,obstacle)
                 intersection = min_intersect(start_point,destination_point,obstacle)
+                obstacle_dist = calc_dist([start_point,intersection[0]])
+
                 # print("\n\nObstacle intialized:"+str(obstacle)+" Does intersect:"+str(does_intersect(start_point,destination_point,obstacle))+" with a dist of "+ str(dist_to_obstacle(start_point,obstacle)) +"\n\n")
 
-            elif dist_to_obstacle(start_point,obstacle)<obstacle_dist:
+            temp_inter = min_intersect(start_point,destination_point,obstacle)
+            if calc_dist([start_point,temp_inter[0]]) < obstacle_dist:
                 # print("\n\nObstacle updated( "+str(obstacle[0])+" ) (old distance ="+str(obstacle_dist)+") new = "+str(dist_to_obstacle(start_point,obstacle)))
                 obstacle_to_avoid = obstacle
-                obstacle_dist = dist_to_obstacle(start_point,obstacle)
-                intersection = min_intersect(start_point,destination_point,obstacle)
+                intersection = temp_inter
+                obstacle_dist = calc_dist([start_point,intersection[0]])
+
 
 
     if obstacle_to_avoid ==[]:
@@ -259,6 +268,8 @@ def checkPath(path, obstacles):
 
     return checkPath(path, remaining_obstacles)
 
+def optimize_path(path,obstacles)
+
 def main():
     f = open('robots.mat.txt','r')
 
@@ -268,7 +279,7 @@ def main():
     # ws = wb.active
     # ws.title = "Data"
 
-    for problem in range (1,31):
+    for problem in range (1,8):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -296,9 +307,9 @@ def main():
 
         # Display info
         print('\nGraph '+str(problem)+':')
-        print("Points ("+str(len(points))+"): " + str(points))
-        print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
-        print("MATRIX:\n")
+        # print("Points ("+str(len(points))+"): " + str(points))
+        # print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
+        # print("MATRIX:\n")
 
 
         # Matrix of paths
@@ -321,7 +332,7 @@ def main():
                     # For this path find closest intersection
                     if(obstacles!=[]):
                         paths[index_i][index_j] = checkPath(paths[index_i][index_j],obstacles)
-                        print(paths[index_i][index_j])
+
         # From there
 
         #----------------------Vizualization------------------------
@@ -345,8 +356,9 @@ def main():
             plt.scatter(point[0],point[1])
         plt.title("Graph "+str(problem))
 
-        # ----Courbes
+        # ----Paths
         if len(points)==2:
+            print(paths[0][1])
             plt.plot([points[0][0],points[1][0]],[points[0][1],points[1][1]])
 
             my_path = paths[0][1]
