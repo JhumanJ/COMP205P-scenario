@@ -13,71 +13,66 @@ def calc_dist(my_list):
         my_sum = my_sum + distance
     return my_sum
 
-def checkInPath(listOfAwakenedRobots, position, length):
-    for k in range(length):
-        if listOfAwakenedRobots[k] != -1:
-            if position == k:
-                return True
-	return False
+def addToSolution(listOfPaths, shortestEdge):
 
+    newList = []
+    num = len(listOfPaths)-1
 
-def addToSolution(listOfPaths, shortestEdge, botNumber):
+    for i in range(num):
+        newList.append(listOfPaths[i])
 
-	newList = []
+    for i in range(num, num + len(shortestEdge)):
+        newList.append(shortestEdge[i-num])
 
-	for i in range(len(listOfPaths[botNumber])-1):
-		newList[i] = listOfPaths[botNumber][i]
-
-	for i in range(len(listOfPaths[botNumber])-1,len(listOfPaths[botNumber])-1 + len(shortestEdge)):
-		newList[i] = shortestEdge[i-len(listOfPaths[botNumber])-1]
-
-	return newList
+    return newList
 
 
 def algorithm(matrix):
 
     paths = matrix
-	# Array that stores the indexes of the points of the awaken robots
-    listOfAwakenedRobots = [len(paths)]
+    # Array that stores the indexes of the points of the awaken robots
+    listOfAwakenedRobots = []
 
-	# list of the solutions
-    listOfPaths = []
+    # list of the solutions
+    listOfPaths = [[]]
 
-	# All points are initiated to index
+    # All points are initiated to index
     for i in range(len(paths)):
-        listOfAwakenedRobots[i] = -1
+        listOfAwakenedRobots.append(-1)
 
     listOfAwakenedRobots[0] = 0
 
     for row in range(len(paths)-1): #It covers all the nodes in the graph not counting the return to start node
 
-        shortestEdge = [(0,0)(0,0)]
+        shortestEdge = [(0,0),(0,0)]
         botNumber = -1
         my_from = -1
 
-        for awakenBot in range(listOfAwakenedRobots):
+        for awakenBot in range(len(listOfAwakenedRobots)):
+            
             if listOfAwakenedRobots[awakenBot] != -1:
+                
                 currentNode = listOfAwakenedRobots[awakenBot]
 
-                for column in range(len(paths)):    #It looks at all unvisited point from the current point it is visiting
+                for column in range(len(paths)):
 
-	               if checkInPath(listOfAwakenedRobots, column, len(paths)):
+                    if listOfAwakenedRobots[column] != -1:
 
-                        if shortestEdge == [(0,0)(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
+                        if shortestEdge == [(0,0),(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
                             shortestEdge = matrix[currentNode][column]
                             botNumber = awakenBot
                             my_from = column
 
-                        if calc_dist(matrix[currentNode][j]) < calc_dist(shortestEdge): #It checks which edge is the shortest
+                        if calc_dist(matrix[currentNode][column]) < calc_dist(shortestEdge): #It checks which edge is the shortest
                             shortestEdge = matrix[currentNode][column]
                             botNumber = awakenBot
                             my_from = column
 
-		listOfAwakenedRobots[botNumber] = botNumber
-        listOfAwakenedRobots[my_from] = botNumber
-        listOfPaths = addToSolution(listOfPaths, shortestEdge, botNumber)
+        listOfAwakenedRobots[botNumber] = my_from
+        listOfAwakenedRobots[my_from] = my_from
+        listOfPaths[botNumber] = addToSolution(listOfPaths[botNumber], shortestEdge)
 
-	return listOfPaths
+    return listOfPaths
 
 # from openpyxl import Workbook
 
