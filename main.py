@@ -293,7 +293,7 @@ def main():
         except(SyntaxError,ValueError):
             pass
 
-        # Parse obstacles
+        #Parse obstacles
         obstacles = []
         for item in temp_obstacles:
             temp_item=()
@@ -312,7 +312,7 @@ def main():
         # print("MATRIX:\n")
 
 
-        # Matrix of paths
+        # ------------ Matrix of paths ------------
         paths = []
 
         for i in range(0,len(points)):
@@ -332,8 +332,6 @@ def main():
                     # For this path find closest intersection
                     if(obstacles!=[]):
                         paths[index_i][index_j] = checkPath(paths[index_i][index_j],obstacles)
-
-        # From there
 
         #----------------------Vizualization------------------------
         fig=plt.figure()
@@ -371,5 +369,10 @@ def main():
                 plt.plot(x,y)
 
         plt.show()
+
+        #---------------output data in txt file---------------
+        f = open('robots.mat.txt','w')
+
+
 
 main()
