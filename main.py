@@ -281,7 +281,19 @@ def main():
     outputw.write(lines[0])
     outputw.write(lines[1])
 
-    for problem in range (1,4):
+    f.readline()
+    f.readline()
+    f.readline()
+    f.readline()
+    f.readline()
+    f.readline()
+    f.readline()
+    f.readline()
+    f.readline()
+    f.readline()
+    f.readline()
+
+    for problem in range (12,13):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -368,9 +380,12 @@ def main():
             plt.scatter(point[0],point[1])
         plt.title("Graph "+str(problem))
 
+
         # ----Paths
         result_path = algorithm(paths)
-        print(result_path)
+        # print(result_path)
+        plt.show()
+
         for my_path in result_path:
             x=[]
             y=[]
@@ -378,8 +393,9 @@ def main():
                 x.append(my_path[i][0])
                 y.append(my_path[i][1])
             plt.plot(x,y)
+            plt.pause(0.05)
 
-        plt.show()
+        plt.savefig('graph/'+str(problem)+'.png')
 
         # Clear path
         for item in result_path:
