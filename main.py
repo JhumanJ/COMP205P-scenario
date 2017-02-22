@@ -281,19 +281,19 @@ def main():
     outputw.write(lines[0])
     outputw.write(lines[1])
 
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
-    f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
+    # f.readline()
 
-    for problem in range (12,13):
+    for problem in range (1,4):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -384,7 +384,6 @@ def main():
         # ----Paths
         result_path = algorithm(paths)
         # print(result_path)
-        plt.show()
 
         for my_path in result_path:
             x=[]
@@ -393,11 +392,12 @@ def main():
                 x.append(my_path[i][0])
                 y.append(my_path[i][1])
             plt.plot(x,y)
-            plt.pause(0.05)
+
+
 
         plt.savefig('graph/'+str(problem)+'.png')
 
-        # Clear path
+        # =--------Clear path
         for item in result_path:
             if item==[]:
                 result_path.remove(item)
@@ -405,7 +405,7 @@ def main():
                 if item[indx]==item[indx+1]:
                     item.pop(indx)
 
-        #write line
+        #----------write line
         outputw.write(str(problem)+": ")
         for item in result_path:
             for indx in range(len(item)):
@@ -417,6 +417,9 @@ def main():
         outputw.seek(-1, os.SEEK_END)
         outputw.truncate()
         outputw.write("\n")
+
+        plt.show()
+
 
     #close input
     outputw.close()
