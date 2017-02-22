@@ -3,9 +3,6 @@ import ast, math
 import matplotlib.pyplot as plt
 import itertools
 
-# from openpyxl import Workbook
-
-
 # -------------------- ROBOT PATH GENERATION -----------------------
 
 #Open File
@@ -82,6 +79,15 @@ def algorithm(matrix):
 
 	return listOfPaths
 
+# from openpyxl import Workbook
+
+def calc_dist(my_list):
+    my_sum = 0
+    for i in range(len(my_list)-1):
+        distance = math.sqrt( ((my_list[i][0]-my_list[i+1][0])**2)+((my_list[i][1]-my_list[i+1][1])**2) )
+        my_sum = my_sum + distance
+    return my_sum
+
 # --------------------------- GENERATE MATRIX ------------
 
 def onSegment((xi,yi),(xj,yj),(xk,yk)):
@@ -105,93 +111,163 @@ def line_intersection(line1, line2):
         else:
             return False
 
+#find next corder of obstacle
 def next_obstacle_point(point,obstacle):
     if not point in obstacle:
         return False
 
     index = obstacle.index(point)
+
+    index = index + 1
     if index == len(obstacle):
         index = 0
-    else:
-        index = index + 1
+
     return obstacle[index]
 
+#check if segment intersect with obstacle
+def does_intersect(x,y,obstacle):
+    for i in range(0,len(obstacle)-2):
+        my_intersect = line_intersection((x,y),(obstacle[i],obstacle[i+1]))
+        if my_intersect != False:
+            return True
+        # print("Intersection of "+str(start_point)+str(destination_point)+" "+str(obstacle[i])+str(obstacle[i+1])+" -> "+str(my_intersect))
+    if line_intersection((x,y),(obstacle[0],obstacle[len(obstacle)-1])) != False:
+            return True
+    return False
+
+# return minimum
+def min_intersect(x,y,obstacle):
+    min_inter = 100000000
+    min_point = ()
+
+    count = 0
+    for i in range(0,len(obstacle)-2):
+        my_intersect = line_intersection((x,y),(obstacle[i],obstacle[i+1]))
+        if my_intersect != False:
+            if calc_dist([x,my_intersect])<min_inter:
+                min_inter = calc_dist([x,my_intersect])
+                min_point = my_intersect
+                count = i
+
+    my_intersect = line_intersection((x,y),(obstacle[0],obstacle[len(obstacle)-1]))
+    if my_intersect != False:
+
+        if calc_dist([x,my_intersect])<min_inter:
+            min_inter = calc_dist([x,my_intersect])
+            min_point = my_intersect
+            count = len(obstacle)-1
+
+    return [min_point,count]
+#return shortest distance to obstacle
+def dist_to_obstacle(point,obstacle):
+    distance = 0
+    for i in range(0,len(obstacle)-1):
+        dist = calc_dist([point,obstacle[i]])
+        if distance==0:
+            distance=dist
+        elif dist<distance:
+            distance=dist
+
+    return distance
+
+#Check if path between point and obstacle is doable
+def can_reach_obstacle_point(point,obstacle_point,obstacle):
+    my_obstacle = obstacle[:]
+    my_obstacle.pop(my_obstacle.index(obstacle_point))
+    for my_point in my_obstacle:
+        if line_intersection((point,obstacle_point),(my_point,next_obstacle_point(my_point,my_obstacle)))!=False:
+            return False
+    return True
+
+
+def path_intersection(path,point_to_add):
+    for i in range(0,len(path)-3):
+        my_intersect = line_intersection((path[i],path[i+1]),(path[len(path)-2],point_to_add))
+        if my_intersect != False:
+            return True
+        # print("Intersection of "+str(start_point)+str(destination_point)+" "+str(obstacle[i])+str(obstacle[i+1])+" -> "+str(my_intersect))
+    return False
+
+
+#take a path between two points and expanding to avoid obstacles
 def checkPath(path, obstacles):
+
+    print("New Obstacle")
 
     start_point = path[len(path)-2]
     destination_point = path[len(path)-1]
 
+    obstacle_to_avoid = []
+    obstacle_dist = 0
+    intersection = []
 
-    # Todo vars
-    closest_inter_point = ()
-    intersect_segment = ()
-    intersection_obstacle = []
-
-    #init todo var
+    #find obstacle to avoid
     for obstacle in obstacles:
-        for i in range(0,len(obstacle)-1):
-            my_intersect = line_intersection((start_point,destination_point),(obstacle[i],obstacle[i+1]))
-            if my_intersect != False:
-                if closest_inter_point == ():
-                    closest_inter_point = my_intersect
-                    intersect_segment = (obstacle[i],obstacle[i+1])
-                    intersection_obstacle = obstacle
-                elif calc_dist([start_point,closest_inter_point])>calc_dist([start_point,my_intersect]):
-                    closest_inter_point = my_intersect
-                    intersect_segment = (obstacle[i],obstacle[i+1])
-                    intersection_obstacle = obstacle
-            # print("Intersection of "+str(start_point)+str(destination_point)+" "+str(obstacle[i])+str(obstacle[i+1])+" -> "+str(my_intersect))
-        my_intersect = line_intersection((start_point,destination_point),(obstacle[0],obstacle[len(obstacle)-1]))
-        if my_intersect != False:
-            if closest_inter_point == ():
-                closest_inter_point = my_intersect
-                intersect_segment = (obstacle[i],obstacle[i+1])
-                intersection_obstacle = obstacle
-            elif calc_dist([start_point,closest_inter_point])>calc_dist([start_point,my_intersect]):
-                closest_inter_point = my_intersect
-                intersect_segment = (obstacle[i],obstacle[i+1])
-                intersection_obstacle = obstacle
-        # print("Intersection of "+str(start_point)+str(destination_point)+" "+str(obstacle[0])+str(obstacle[len(obstacle)-1])+" -> "+str(my_intersect))
-        # print("---")
 
-    if intersection_obstacle != []:
-        #inersection with an obstacle
+        if (does_intersect(start_point,destination_point,obstacle)):
+            if obstacle_to_avoid == []:
+                obstacle_to_avoid = obstacle
+                obstacle_dist = dist_to_obstacle(start_point,obstacle)
+                intersection = min_intersect(start_point,destination_point,obstacle)
+                # print("\n\nObstacle intialized:"+str(obstacle)+" Does intersect:"+str(does_intersect(start_point,destination_point,obstacle))+" with a dist of "+ str(dist_to_obstacle(start_point,obstacle)) +"\n\n")
 
-        #find closest point of obstacle
-        closest_point_of_obstacle = ()
-        for point in intersection_obstacle:
-            if closest_point_of_obstacle == ():
-                closest_point_of_obstacle = point
-            elif calc_dist([start_point,closest_point_of_obstacle])>calc_dist([start_point,point]):
-                closest_point_of_obstacle = point
-
-        new_path = path
-        new_path.insert(len(new_path)-1,closest_point_of_obstacle)
+            elif dist_to_obstacle(start_point,obstacle)<obstacle_dist:
+                # print("\n\nObstacle updated( "+str(obstacle[0])+" ) (old distance ="+str(obstacle_dist)+") new = "+str(dist_to_obstacle(start_point,obstacle)))
+                obstacle_to_avoid = obstacle
+                obstacle_dist = dist_to_obstacle(start_point,obstacle)
+                intersection = min_intersect(start_point,destination_point,obstacle)
 
 
-        # Si il y a une intersection entre le dernier segment et l'obstacle continuer de contourner
-        still_inter = True
-        while still_inter:
-            still_inter = False
-            for i in range(0,len(intersection_obstacle)-2):
+    if obstacle_to_avoid ==[]:
+        return path
 
-                if line_intersection((new_path[len(new_path)-2],new_path[len(new_path)-1]),(intersection_obstacle[i],intersection_obstacle[i+1])) != False:
-                    still_inter = True
-                    print(str(intersection_obstacle[i])+" "+str(intersection_obstacle[i+1]))
+    #first we connect to the point of intersection
+    path.insert(len(path)-1,intersection[0])
+    #then we join the corner
+    path.insert(len(path)-1,next_obstacle_point(obstacle_to_avoid[intersection[1]],obstacle_to_avoid))
 
+    #the first corner to reach is a corner that is reachable and as far as possible
+    # for point in obstacle_to_avoid:
+    #     if can_reach_obstacle_point(start_point,point,obstacle_to_avoid) and calc_dist([start_point,point])>max_dist:
+    #         max_dist = calc_dist([start_point,point])
+    #         first_add_point = point
 
-            if line_intersection((new_path[len(new_path)-2],new_path[len(new_path)-1]),(intersection_obstacle[0],intersection_obstacle[len(intersection_obstacle)-1])) != False:
-                still_inter = True
-                print(str(intersection_obstacle[i])+" "+str(intersection_obstacle[i+1]))
+    #we check that link we found to reach obstacle doen't hit any other obstacle
+    # temp_remaining_obstacles = obstacles[:]
+    # temp_remaining_obstacles.remove(obstacle_to_avoid)
+    # prev_path = checkPath([start_point,first_add_point],temp_remaining_obstacles)
+    #
+    #
+    # # make the check
+    # if prev_path != [start_point,first_add_point]:
+    #     print("Error--")
+    #     temp_path=path[:]
+    #     temp_path.pop(len(temp_path)-1)
+    #     temp_path.extend(prev_path)
+    #     temp_path.append(path[len(path)-1])
+    #     path = temp_path
+    # else:
+    # path.insert(len(path)-1,first_add_point)
+    # else:
+    #     print("todo")
 
+    #now we follow wall until we can reach destination_point
 
-            new_path.insert(len(new_path)-1,next_obstacle_point(closest_point_of_obstacle,intersection_obstacle))
+    next_point = next_obstacle_point(path[len(path)-2],obstacle_to_avoid)
 
-        return new_path
+    while (not can_reach_obstacle_point(destination_point,path[len(path)-2],obstacle_to_avoid)):
+        print(str(next_point)+" :"+str(path_intersection(path,next_point)))
+        path.insert(len(path)-1,next_point)
+        next_point = next_obstacle_point(next_point,obstacle_to_avoid)
 
-    return path
+    #obstacle has been passed know we need to do the same thing for the next obstacle
+    remaining_obstacles = obstacles[:]
+    remaining_obstacles.remove(obstacle_to_avoid)
 
-    #  /find closest Intersection
+    # print("remaining_obstacles:"+str(remaining_obstacles))
+    # print("Path:"+str(path))
+
+    return checkPath(path, remaining_obstacles)
 
 def main():
     f = open('robots.mat.txt','r')
@@ -202,7 +278,7 @@ def main():
     # ws = wb.active
     # ws.title = "Data"
 
-    for problem in range (1,31):
+    for problem in range (1,6):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -253,10 +329,12 @@ def main():
             for index_j in range(index_i,len(points)):
                 if index_i != index_j:
                     # For this path find closest intersection
-                    # print( checkPath(paths[index_i][index_j],obstacles))
-                    pass
+                    if(obstacles!=[]):
+                        paths[index_i][index_j] = checkPath(paths[index_i][index_j],obstacles)
+                        print(paths[index_i][index_j])
+        # From there
 
-        #Display
+        #----------------------Vizualization------------------------
         fig=plt.figure()
         ax=fig.add_subplot(111)
 
@@ -276,6 +354,19 @@ def main():
         for point in points:
             plt.scatter(point[0],point[1])
         plt.title("Graph "+str(problem))
+
+        # ----Courbes
+        if len(points)==2:
+            plt.plot([points[0][0],points[1][0]],[points[0][1],points[1][1]])
+
+            my_path = paths[0][1]
+            for point in my_path:
+                x=[]
+                y=[]
+                for i in range(0,len(my_path)):
+                    x.append(my_path[i][0])
+                    y.append(my_path[i][1])
+                plt.plot(x,y)
 
         plt.show()
 
