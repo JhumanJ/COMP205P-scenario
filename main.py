@@ -121,7 +121,7 @@ def next_obstacle_point(point,obstacle):
 
 #check if segment intersect with obstacle
 def does_intersect(x,y,obstacle):
-    for i in range(0,len(obstacle)-2):
+    for i in range(0,len(obstacle)-1):
         my_intersect = line_intersection((x,y),(obstacle[i],obstacle[i+1]))
         if my_intersect != False:
             return True
@@ -136,7 +136,7 @@ def min_intersect(x,y,obstacle):
     min_point = ()
 
     count = 0
-    for i in range(0,len(obstacle)-2):
+    for i in range(0,len(obstacle)-1):
         my_intersect = line_intersection((x,y),(obstacle[i],obstacle[i+1]))
         if my_intersect != False:
             if calc_dist([x,my_intersect])<min_inter:
@@ -281,19 +281,7 @@ def main():
     outputw.write(lines[0])
     outputw.write(lines[1])
 
-    # f.readline()
-    # f.readline()
-    # f.readline()
-    # f.readline()
-    # f.readline()
-    # f.readline()
-    # f.readline()
-    # f.readline()
-    # f.readline()
-    # f.readline()
-    # f.readline()
-
-    for problem in range (1,4):
+    for problem in range (1,31):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -417,9 +405,6 @@ def main():
         outputw.seek(-1, os.SEEK_END)
         outputw.truncate()
         outputw.write("\n")
-
-        plt.show()
-
 
     #close input
     outputw.close()
