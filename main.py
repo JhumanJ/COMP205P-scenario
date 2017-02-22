@@ -1,36 +1,29 @@
 #Imports
-import ast, math
+import ast, math, os
 import matplotlib.pyplot as plt
-import itertools
 
 # -------------------- ROBOT PATH GENERATION -----------------------
 
-#Open File
-def calc_dist(my_list):
-    my_sum = 0
-    for i in range(len(my_list)-1):
-        distance = math.sqrt( ((my_list[i][0]-my_list[i+1][0])**2)+((my_list[i][1]-my_list[i+1][1])**2) )
-        my_sum = my_sum + distance
-    return my_sum
-
 #checks if the robot has already been woken up to see if this node still has to be travelled to
+
 def checkInPath(listOfAwakenedRobots, position, length):
     if listOfAwakenedRobots[position] != -1:
         return True
     return False
 
 
-def addToSolution(listOfPaths, shortestEdge, botNumber):
+def addToSolution(listOfPaths, shortestEdge):
 
-	newList = []
+    newList = []
+    num = len(listOfPaths)-1
 
-	for i in range(len(listOfPaths[botNumber])-1):
-		newList[i] = listOfPaths[botNumber][i]
+    for i in range(num):
+        newList.append(listOfPaths[i])
 
-	for i in range(len(listOfPaths[botNumber])-1,len(listOfPaths[botNumber])-1 + len(shortestEdge)):
-		newList[i] = shortestEdge[i-len(listOfPaths[botNumber])-1]
+    for i in range(num, num + len(shortestEdge)):
+        newList.append(shortestEdge[i-num])
 
-	return newList
+    return newList
 
 
 def algorithm(matrix):
@@ -40,7 +33,9 @@ def algorithm(matrix):
     listOfAwakenedRobots = []
 
     # list of the solutions
-    listOfPaths = [[]]
+    listOfPaths = []
+    for i in range(len(paths)):
+        listOfPaths.append([])
 
     # All points are initiated to index
     for i in range(len(paths)):
@@ -55,9 +50,9 @@ def algorithm(matrix):
         my_from = -1
 
         for awakenBot in range(len(listOfAwakenedRobots)):
-		
-		if listOfAwakenedRobots[awakenBot] != -1:
-                
+
+            if listOfAwakenedRobots[awakenBot] != -1:
+
                 currentNode = listOfAwakenedRobots[awakenBot]
 
                 for column in range(len(paths)):
@@ -76,11 +71,10 @@ def algorithm(matrix):
 
         listOfAwakenedRobots[botNumber] = my_from
         listOfAwakenedRobots[my_from] = my_from
+        # print ("Len:"+str(len(listOfPaths)) + " index: " + str(botNumber))
         listOfPaths[botNumber] = addToSolution(listOfPaths[botNumber], shortestEdge)
 
     return listOfPaths
-
-# from openpyxl import Workbook
 
 def calc_dist(my_list):
     my_sum = 0
@@ -193,9 +187,10 @@ def path_intersection(path,point_to_add):
 
 
 #take a path between two points and expanding to avoid obstacles
-def checkPath(path, obstacles):
+def checkPath(mypath, obstacles):
 
     # print("New Obstacle")
+    path = mypath[:]
 
     start_point = path[len(path)-2]
     destination_point = path[len(path)-1]
@@ -269,18 +264,24 @@ def checkPath(path, obstacles):
 
     return checkPath(path, remaining_obstacles)
 
-def optimize_path(path,obstacles)
-
 def main():
+    # open input data
     f = open('robots.mat.txt','r')
 
-    # Excel code
-    # column_number = 1
-    # wb = Workbook()
-    # ws = wb.active
-    # ws.title = "Data"
+    #---------------prepare output data in txt file---------------
+    outputr = open('output.txt','r')
+    lines = outputr.readlines()
+    outputr.close()
 
-    for problem in range (1,8):
+    outputw = open('output.txt','w')
+    #delete all line
+    outputw.seek(0)
+    outputw.truncate()
+    # re write code and password
+    outputw.write(lines[0])
+    outputw.write(lines[1])
+
+    for problem in range (1,4):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -326,13 +327,25 @@ def main():
                     tempList.append(tempTuple)
             paths.append(tempList)
 
-        # Intersections
+            # print(tempList)
+        # print "\n\n"
+        # print(paths)
+        # print "\n\n"
+
+
+        # Intersections handler / checkpath
         for index_i in range(0,len(points)):
-            for index_j in range(index_i,len(points)):
-                if index_i != index_j:
+            for index_j in range(index_i+1,len(points)):
+                if paths[index_i][index_j]!=[()]:
                     # For this path find closest intersection
-                    if(obstacles!=[]):
-                        paths[index_i][index_j] = checkPath(paths[index_i][index_j],obstacles)
+                    paths[index_i][index_j] = checkPath(paths[index_i][index_j],obstacles)
+                    # print(paths[index_i][index_j])
+
+                    paths[index_j][index_i] = paths[index_i][index_j][:]
+                    paths[index_j][index_i].reverse()
+
+        #     print(paths[index_i])
+        # print "\n\n"
 
         #----------------------Vizualization------------------------
         fig=plt.figure()
@@ -348,7 +361,7 @@ def main():
                     y.append(obstacle[i][1])
                 x.append(obstacle[0][0])
                 y.append(obstacle[0][1])
-                plt.plot(x,y)
+                plt.plot(x,y,'k')
 
         # ----Points
         for point in points:
@@ -356,24 +369,41 @@ def main():
         plt.title("Graph "+str(problem))
 
         # ----Paths
-        if len(points)==2:
-            print(paths[0][1])
-            plt.plot([points[0][0],points[1][0]],[points[0][1],points[1][1]])
-
-            my_path = paths[0][1]
-            for point in my_path:
-                x=[]
-                y=[]
-                for i in range(0,len(my_path)):
-                    x.append(my_path[i][0])
-                    y.append(my_path[i][1])
-                plt.plot(x,y)
+        result_path = algorithm(paths)
+        print(result_path)
+        for my_path in result_path:
+            x=[]
+            y=[]
+            for i in range(0,len(my_path)):
+                x.append(my_path[i][0])
+                y.append(my_path[i][1])
+            plt.plot(x,y)
 
         plt.show()
 
-        #---------------output data in txt file---------------
-        f = open('robots.mat.txt','w')
+        # Clear path
+        for item in result_path:
+            if item==[]:
+                result_path.remove(item)
+            for indx in range(len(item)-2):
+                if item[indx]==item[indx+1]:
+                    item.pop(indx)
 
+        #write line
+        outputw.write(str(problem)+": ")
+        for item in result_path:
+            for indx in range(len(item)):
+                outputw.write(str(item[indx]))
+                if (indx == (len(item)-1)):
+                        outputw.write(";")
+                else:
+                    outputw.write(",")
+        outputw.seek(-1, os.SEEK_END)
+        outputw.truncate()
+        outputw.write("\n")
 
+    #close input
+    outputw.close()
+    f.close()
 
 main()
