@@ -273,7 +273,7 @@ def main():
     # ws = wb.active
     # ws.title = "Data"
 
-    for problem in range (1,6):
+    for problem in range (1,31):
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
