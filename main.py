@@ -1,84 +1,161 @@
 #Imports
-import ast, math, os, time, random
+import ast, math, os, time, random, sys
 import matplotlib.pyplot as plt
+from shapely.geometry import *
+from descartes import PolygonPatch
 
 # -------------------- ROBOT PATH GENERATION -----------------------
 
-#checks if the robot has already been woken up to see if this node still has to be travelled to
 
-def checkInPath(listOfAwakenedRobots, position, length):
-    if listOfAwakenedRobots[position] != -1:
-        return True
-    return False
+
+def isInSleeping(robots, pos):
+
+  for i in range(len(robots)):
+      if robots[i] == pos:
+          return True
+  return False
 
 
 def addToSolution(listOfPaths, shortestEdge):
 
-    newList = []
-    num = len(listOfPaths)-1
+  newList = []
+  num = len(listOfPaths)-1
 
-    for i in range(num):
-        newList.append(listOfPaths[i])
+  for i in range(num):
+      newList.append(listOfPaths[i])
 
-    for i in range(num, num + len(shortestEdge)):
-        newList.append(shortestEdge[i-num])
+  for i in range(num, num + len(shortestEdge)):
+      newList.append(shortestEdge[i-num])
 
-    return newList
+  return newList
 
 
 def algorithm(matrix):
 
-    paths = matrix
-    # Array that stores the indexes of the points of the awaken robots
-    listOfAwakenedRobots = []
+  # Array that stores the indexes of the points of the awaken robots
+  availableRobots = []
+  sleepingRobots = []
+  positions = []
 
-    # list of the solutions
-    listOfPaths = []
-    for i in range(len(paths)):
-        listOfPaths.append([])
+  # list of the solutions
+  listOfPaths = [[]]
+  for i in range(len(matrix)):
+      listOfPaths.append([])
 
-    # All points are initiated to index
-    for i in range(len(paths)):
-        listOfAwakenedRobots.append(-1)
+  availableRobots.append(0)
 
-    listOfAwakenedRobots[0] = 0
+  for i in range(1,len(matrix)):
+      sleepingRobots.append(i)
 
-    print("Len paths: "+str(len(paths)))
-    counter = 0
+  for i in range(len(matrix)):
+      positions.append(i)
 
-    for row in range(len(paths)-1): #It covers all the nodes in the graph not counting the return to start node
-        print("Algorithm Step: "+str(counter)+"/"+str(len(paths)))
-        counter = counter + 1
-        shortestEdge = [(0,0),(0,0)]
-        botNumber = -1
-        my_from = -1
 
-        for awakenBot in range(len(listOfAwakenedRobots)):
+  while (len(sleepingRobots) != 0):
 
-            if listOfAwakenedRobots[awakenBot] != -1:
+      tempAvailableRobots = availableRobots[:]
 
-                currentNode = listOfAwakenedRobots[awakenBot]
+      for i in range(len(tempAvailableRobots)):
 
-                for column in range(len(paths)):
+          shortestEdge = [(0,0),(0,0)]
+          currentNode =  tempAvailableRobots[i]
+          newWokenBot = 0
 
-                    if checkInPath(listOfAwakenedRobots, column, len(paths)) == False:
+          for column in range(len(matrix)):
 
-                        if shortestEdge == [(0,0),(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
-                            shortestEdge = matrix[currentNode][column]
-                            botNumber = awakenBot
-                            my_from = column
+                  if isInSleeping(sleepingRobots, column):
 
-                        if calc_dist(matrix[currentNode][column]) < calc_dist(shortestEdge): #It checks which edge is the shortest
-                            shortestEdge = matrix[currentNode][column]
-                            botNumber = awakenBot
-                            my_from = column
+                      if shortestEdge == [(0,0),(0,0)] and matrix[positions[currentNode]][column] != 0: #Initialisation of the shortest distance
+                          shortestEdge = matrix[positions[currentNode]][column]
+                          newWokenBot = column
 
-        listOfAwakenedRobots[botNumber] = my_from
-        listOfAwakenedRobots[my_from] = my_from
-        # print ("Len:"+str(len(listOfPaths)) + " index: " + str(botNumber))
-        listOfPaths[botNumber] = addToSolution(listOfPaths[botNumber], shortestEdge)
+                      if calc_dist(matrix[positions[currentNode]][column]) < calc_dist(shortestEdge): #It checks which edge is the shortest
+                          shortestEdge = matrix[positions[currentNode]][column]
+                          newWokenBot = column
 
-    return listOfPaths
+          if shortestEdge != [(0,0),(0,0)] and newWokenBot != 0 :
+              listOfPaths[currentNode] = addToSolution(listOfPaths[currentNode], shortestEdge)
+              positions[newWokenBot] = newWokenBot
+              positions[currentNode] = newWokenBot
+              sleepingRobots.remove(newWokenBot)
+              availableRobots.append(newWokenBot)
+  return listOfPaths
+
+#checks if the robot has already been woken up to see if this node still has to be travelled to
+#
+# def checkInPath(listOfAwakenedRobots, position, length):
+#     if listOfAwakenedRobots[position] != -1:
+#         return True
+#     return False
+#
+#
+# def addToSolution(listOfPaths, shortestEdge):
+#
+#     newList = []
+#     num = len(listOfPaths)-1
+#
+#     for i in range(num):
+#         newList.append(listOfPaths[i])
+#
+#     for i in range(num, num + len(shortestEdge)):
+#         newList.append(shortestEdge[i-num])
+#
+#     return newList
+#
+#
+# def algorithm(matrix):
+#
+#     paths = matrix
+#     # Array that stores the indexes of the points of the awaken robots
+#     listOfAwakenedRobots = []
+#
+#     # list of the solutions
+#     listOfPaths = []
+#     for i in range(len(paths)):
+#         listOfPaths.append([])
+#
+#     # All points are initiated to index
+#     for i in range(len(paths)):
+#         listOfAwakenedRobots.append(-1)
+#
+#     listOfAwakenedRobots[0] = 0
+#
+#     print("Len paths: "+str(len(paths)))
+#     counter = 0
+#
+#     for row in range(len(paths)-1): #It covers all the nodes in the graph not counting the return to start node
+#         print("Algorithm Step: "+str(counter)+"/"+str(len(paths)))
+#         counter = counter + 1
+#         shortestEdge = [(0,0),(0,0)]
+#         botNumber = -1
+#         my_from = -1
+#
+#         for awakenBot in range(len(listOfAwakenedRobots)):
+#
+#             if listOfAwakenedRobots[awakenBot] != -1:
+#
+#                 currentNode = listOfAwakenedRobots[awakenBot]
+#
+#                 for column in range(len(paths)):
+#
+#                     if checkInPath(listOfAwakenedRobots, column, len(paths)) == False:
+#
+#                         if shortestEdge == [(0,0),(0,0)] and matrix[currentNode][column] !=0: #Initialisation of the shortest distance
+#                             shortestEdge = matrix[currentNode][column]
+#                             botNumber = awakenBot
+#                             my_from = column
+#
+#                         if calc_dist(matrix[currentNode][column]) < calc_dist(shortestEdge): #It checks which edge is the shortest
+#                             shortestEdge = matrix[currentNode][column]
+#                             botNumber = awakenBot
+#                             my_from = column
+#
+#         listOfAwakenedRobots[botNumber] = my_from
+#         listOfAwakenedRobots[my_from] = my_from
+#         # print ("Len:"+str(len(listOfPaths)) + " index: " + str(botNumber))
+#         listOfPaths[botNumber] = addToSolution(listOfPaths[botNumber], shortestEdge)
+#
+#     return listOfPaths
 
 def calc_dist(my_list):
     my_sum = 0
@@ -170,18 +247,6 @@ def min_intersect(x,y,obstacle):
 
     return [min_point,count]
 
-#return shortest distance to obstacle
-# def dist_to_obstacle(point,destination,obstacle):
-#     distance = 0
-#     # my_intersect =
-#         dist = calc_dist([point,obstacle[i]])
-#         if distance==0:
-#             distance=dist
-#         elif dist<distance:
-#             distance=dist
-#
-#     return distance
-
 #Check if path between point and obstacle is doable
 def can_reach_obstacle_point(point,obstacle_point,obstacle):
     my_obstacle = obstacle[:]
@@ -201,204 +266,13 @@ def path_intersection(path,point_to_add):
         # print("Intersection of "+str(start_point)+str(destination_point)+" "+str(obstacle[i])+str(obstacle[i+1])+" -> "+str(my_intersect))
     return False
 
+#check if line is in obstacle
+def line_in_obstacle(obstacle,line):
+    polygon = Polygon(obstacle)
+    line = LineString(line)
+    return line.within(polygon)
 
 #take a path between two points and expanding to avoid obstacles (version right)
-def checkPathAlternate(mypath, obstacles):
-
-    # print("New Obstacle")
-    path = mypath[:]
-
-    # print(path)
-
-    start_point = path[len(path)-2]
-    destination_point = path[len(path)-1]
-
-    old_obstacle=[]
-    if len(path)>2:
-        #retrieve previous obstacle
-        old_obstacle = obstacles[len(obstacles)-1]
-        obstacles.pop(len(obstacles)-1)
-
-    obstacle_to_avoid = []
-    obstacle_dist = 0
-    intersection = []
-
-    my_random = random.randint(0, 1)
-
-    #find obstacle to avoid
-    for obstacle in obstacles:
-
-        if (does_intersect(start_point,destination_point,obstacle)):
-            if obstacle_to_avoid == []:
-                obstacle_to_avoid = obstacle
-                intersection = min_intersect(start_point,destination_point,obstacle)
-                obstacle_dist = calc_dist([start_point,intersection[0]])
-
-                # print("\n\nObstacle intialized:"+str(obstacle)+" Does intersect:"+str(does_intersect(start_point,destination_point,obstacle))+" with a dist of "+ str(dist_to_obstacle(start_point,obstacle)) +"\n\n")
-
-            temp_inter = min_intersect(start_point,destination_point,obstacle)
-            if calc_dist([start_point,temp_inter[0]]) < obstacle_dist:
-                # print("\n\nObstacle updated( "+str(obstacle[0])+" ) (old distance ="+str(obstacle_dist)+") new = "+str(dist_to_obstacle(start_point,obstacle)))
-                obstacle_to_avoid = obstacle
-                intersection = temp_inter
-                obstacle_dist = calc_dist([start_point,intersection[0]])
-
-
-
-    if obstacle_to_avoid ==[]:
-        return path
-
-    #if the point found make the path cross keep turning aroung previous obstacle
-    if old_obstacle !=[] and path_intersection(path,intersection[0]):
-        if my_random:
-            next_point = prev_obstacle_point(path[len(path)-2],old_obstacle)
-        else:
-            next_point = next_obstacle_point(path[len(path)-2],old_obstacle)
-
-        #while cross path
-        # temp_count = 0
-        while path_intersection(path,intersection[0]) :
-            # print('cross path')
-            path.insert(len(path)-1,next_point)
-            if my_random:
-                next_point = prev_obstacle_point(next_point,old_obstacle)
-            else:
-                next_point = next_obstacle_point(next_point,old_obstacle)
-            # temp_count = temp_count +1
-            # # if temp_count > len(old_obstacle):
-            # #     return path
-        #whiile point isnt reachable
-        while (not can_reach_obstacle_point(destination_point,path[len(path)-2],old_obstacle)):
-            # print('not reachable')
-            path.insert(len(path)-1,next_point)
-
-            if my_random:
-                next_point = prev_obstacle_point(next_point,old_obstacle)
-            else:
-                next_point = next_obstacle_point(next_point,old_obstacle)
-
-    #first we connect to the point of intersection
-    path.insert(len(path)-1,intersection[0])
-    #then we join the corner
-
-    if my_random:
-        path.insert(len(path)-1,prev_obstacle_point(obstacle_to_avoid[intersection[1]],obstacle_to_avoid))
-    else:
-        path.insert(len(path)-1,next_obstacle_point(obstacle_to_avoid[intersection[1]],obstacle_to_avoid))
-
-    if my_random:
-        next_point = prev_obstacle_point(path[len(path)-2],obstacle_to_avoid)
-    else:
-        next_point = next_obstacle_point(path[len(path)-2],obstacle_to_avoid)
-
-    #we follow wall while it can't reach obstacle
-    while (not can_reach_obstacle_point(destination_point,path[len(path)-2],obstacle_to_avoid)):
-        # print('cant reach')
-        path.insert(len(path)-1,next_point)
-        if my_random:
-            next_point = prev_obstacle_point(next_point,obstacle_to_avoid)
-        else:
-            next_point = next_obstacle_point(next_point,obstacle_to_avoid)
-
-
-    #obstacle has been passed know we need to do the same thing for the next obstacle
-    remaining_obstacles = obstacles[:]
-    remaining_obstacles.remove(obstacle_to_avoid)
-    remaining_obstacles.append(obstacle_to_avoid)
-
-    # print("remaining_obstacles:"+str(remaining_obstacles))
-    # print("Path:"+str(path))
-
-    return checkPath(path, remaining_obstacles)
-
-
-
-def checkPathRight(mypath, obstacles):
-
-    # print("New Obstacle")
-    path = mypath[:]
-
-    # print(path)
-
-    start_point = path[len(path)-2]
-    destination_point = path[len(path)-1]
-
-    old_obstacle=[]
-    if len(path)>2:
-        #retrieve previous obstacle
-        old_obstacle = obstacles[len(obstacles)-1]
-        obstacles.pop(len(obstacles)-1)
-
-    obstacle_to_avoid = []
-    obstacle_dist = 0
-    intersection = []
-
-    #find obstacle to avoid
-    for obstacle in obstacles:
-
-        if (does_intersect(start_point,destination_point,obstacle)):
-            if obstacle_to_avoid == []:
-                obstacle_to_avoid = obstacle
-                intersection = min_intersect(start_point,destination_point,obstacle)
-                obstacle_dist = calc_dist([start_point,intersection[0]])
-
-                # print("\n\nObstacle intialized:"+str(obstacle)+" Does intersect:"+str(does_intersect(start_point,destination_point,obstacle))+" with a dist of "+ str(dist_to_obstacle(start_point,obstacle)) +"\n\n")
-
-            temp_inter = min_intersect(start_point,destination_point,obstacle)
-            if calc_dist([start_point,temp_inter[0]]) < obstacle_dist:
-                # print("\n\nObstacle updated( "+str(obstacle[0])+" ) (old distance ="+str(obstacle_dist)+") new = "+str(dist_to_obstacle(start_point,obstacle)))
-                obstacle_to_avoid = obstacle
-                intersection = temp_inter
-                obstacle_dist = calc_dist([start_point,intersection[0]])
-
-
-
-    if obstacle_to_avoid ==[]:
-        return path
-
-    #if the point found make the path cross keep turning aroung previous obstacle
-    if old_obstacle !=[] and path_intersection(path,intersection[0]):
-        next_point = prev_obstacle_point(path[len(path)-2],old_obstacle)
-
-
-        # temp_count = 0
-        #while cross path
-        while path_intersection(path,intersection[0]) :
-            print('cross path')
-            path.insert(len(path)-1,next_point)
-            next_point = prev_obstacle_point(next_point,old_obstacle)
-            # temp_count = temp_count +1
-            # if temp_count > len(old_obstacle):
-            #     return path
-        #whiile point isnt reachable
-        while (not can_reach_obstacle_point(destination_point,path[len(path)-2],old_obstacle)):
-            # print('not reachable')
-            path.insert(len(path)-1,next_point)
-            next_point = prev_obstacle_point(next_point,old_obstacle)
-
-    #first we connect to the point of intersection
-    path.insert(len(path)-1,intersection[0])
-    #then we join the corner
-    path.insert(len(path)-1,prev_obstacle_point(obstacle_to_avoid[intersection[1]],obstacle_to_avoid))
-    next_point = prev_obstacle_point(path[len(path)-2],obstacle_to_avoid)
-
-    #we follow wall while it can't reach obstacle
-    while (not can_reach_obstacle_point(destination_point,path[len(path)-2],obstacle_to_avoid)):
-        # print('cant reach')
-        path.insert(len(path)-1,next_point)
-        next_point = prev_obstacle_point(next_point,obstacle_to_avoid)
-
-    #obstacle has been passed know we need to do the same thing for the next obstacle
-    remaining_obstacles = obstacles[:]
-    remaining_obstacles.remove(obstacle_to_avoid)
-    remaining_obstacles.append(obstacle_to_avoid)
-
-    # print("remaining_obstacles:"+str(remaining_obstacles))
-    # print("Path:"+str(path))
-
-    return checkPath(path, remaining_obstacles)
-
-
 def checkPath(mypath, obstacles):
 
     # print("New Obstacle")
@@ -468,10 +342,29 @@ def checkPath(mypath, obstacles):
     next_point = next_obstacle_point(path[len(path)-2],obstacle_to_avoid)
 
     #we follow wall while it can't reach obstacle
+    points_on_obstacle = 1
     while (not can_reach_obstacle_point(destination_point,path[len(path)-2],obstacle_to_avoid)):
         # print('cant reach')
         path.insert(len(path)-1,next_point)
         next_point = next_obstacle_point(next_point,obstacle_to_avoid)
+        points_on_obstacle = points_on_obstacle + 1
+
+
+    # Optimization
+    # if points_on_obstacle >=3:
+    #
+    #     for tindex in range(len(path)-points_on_obstacle-1,len(path)-3):
+    #         print("--"+str(tindex)+" "+str(len(path)))
+    #         if tindex>=len(path)-2:
+    #             break
+    #
+    #         if not line_in_obstacle(obstacle_to_avoid,[path[tindex],path[tindex+2]]):
+    #             print("Remove point at index "+str(tindex+1)+"/"+str(len(path))+" :"+str(path[tindex+1]))
+    #             path.pop(tindex+1)
+    #             print(str(tindex)+" "+str(len(path)))
+    #             print(tindex==len(path)-2)
+    #             if tindex==len(path)-2:
+    #                 break
 
     #obstacle has been passed know we need to do the same thing for the next obstacle
     remaining_obstacles = obstacles[:]
@@ -500,8 +393,8 @@ def main():
     outputw.write(lines[0])
     outputw.write(lines[1])
 
-    first = 14
-    last = 14
+    first = 22
+    last = 22
     for jump in range(1,first):
         text = f.readline()
 
@@ -536,8 +429,6 @@ def main():
         print('\nGraph '+str(problem)+'.')
         # print("Points ("+str(len(points))+"): " + str(points))
         # print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
-        # print("MATRIX:\n")
-
 
         # ------------ Matrix of paths ------------
         paths = []
@@ -552,10 +443,7 @@ def main():
                     tempList.append(tempTuple)
             paths.append(tempList)
 
-            # print(tempList)
-        # print "\n\n"
-        # print(paths)
-        # print "\n\n"
+
 
 
         # Intersections handler / checkpath
@@ -566,21 +454,7 @@ def main():
             for index_j in range(index_i+1,len(points)):
                 if paths[index_i][index_j]!=[()]:
                     # For this path find closest intersection
-                    paths[index_i][index_j] = checkPathRight(paths[index_i][index_j],obstacles)
-
-                    # tempalternate = checkPathAlternate(paths[index_i][index_j],obstacles)
-                    # tempRight = checkPathRight(paths[index_i][index_j],obstacles)
-                    # tempLeft = checkPath(paths[index_i][index_j],obstacles)
-                    #
-                    # if calc_dist(tempalternate)<calc_dist(tempRight) and calc_dist(tempalternate)<calc_dist(tempLeft):
-                    #     paths[index_i][index_j] = tempalternate
-                    #
-                    # elif calc_dist(tempRight)<calc_dist(tempalternate) and calc_dist(tempRight)<calc_dist(tempLeft):
-                    #     paths[index_i][index_j] = tempRight
-                    #
-                    # else:
-                    #     paths[index_i][index_j] = tempLeft
-
+                    paths[index_i][index_j] = checkPath(paths[index_i][index_j],obstacles)
                     paths[index_j][index_i] = paths[index_i][index_j][:]
                     paths[index_j][index_i].reverse()
 
@@ -597,23 +471,23 @@ def main():
         fig=plt.figure()
         ax=fig.add_subplot(111)
 
+
+        plt.title("Graph "+str(problem))
+        if not os.path.exists('graph/'+str(problem)+'/'):
+            os.makedirs('graph/'+str(problem)+'/')
+
         # ----Obstacles
         if len(obstacles)>0:
+            colors = ['#cbcfd3','#bec2c6','#abaeb2','#9a9da0','#878b8e','#8e9091','#9d9fa0']
+
             for obstacle in obstacles:
-                x=[]
-                y=[]
-                for i in range(0,len(obstacle)):
-                    x.append(obstacle[i][0])
-                    y.append(obstacle[i][1])
-                x.append(obstacle[0][0])
-                y.append(obstacle[0][1])
-                plt.plot(x,y,'k')
+                poly = Polygon(obstacle)
+                ring_patch = PolygonPatch(poly, color=colors[random.randint(0,len(colors)-1)])
+                ax.add_patch(ring_patch)
 
         # ----Points
         for point in points:
             plt.scatter(point[0],point[1])
-        plt.title("Graph "+str(problem))
-
 
         # ----Paths
         result_path = algorithm(paths)
@@ -626,10 +500,6 @@ def main():
                 x.append(my_path[i][0])
                 y.append(my_path[i][1])
             plt.plot(x,y)
-
-
-
-        plt.savefig('graph/'+str(problem)+'.png')
 
         # =--------Clear path
         for item in result_path:
@@ -654,6 +524,8 @@ def main():
 
         print("--Total execution time: " + str(time.time() - start_time) + "sec.")
 
+        plt.savefig('graph/'+str(problem)+'.png')
+        # plt.show()
 
     #close input
     outputw.close()
