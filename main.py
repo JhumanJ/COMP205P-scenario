@@ -1,5 +1,5 @@
 #Imports
-import ast, math, os, time
+import ast, math, os, time, random
 import matplotlib.pyplot as plt
 
 # -------------------- ROBOT PATH GENERATION -----------------------
@@ -123,6 +123,18 @@ def next_obstacle_point(point,obstacle):
 
     return obstacle[index]
 
+def prev_obstacle_point(point,obstacle):
+    if not point in obstacle:
+        return False
+
+    index = obstacle.index(point)
+
+    index = index - 1
+    if index == -1:
+        index = len(obstacle)-1
+
+    return obstacle[index]
+
 #check if segment intersect with obstacle
 def does_intersect(x,y,obstacle):
     for i in range(0,len(obstacle)-1):
@@ -190,7 +202,203 @@ def path_intersection(path,point_to_add):
     return False
 
 
-#take a path between two points and expanding to avoid obstacles
+#take a path between two points and expanding to avoid obstacles (version right)
+def checkPathAlternate(mypath, obstacles):
+
+    # print("New Obstacle")
+    path = mypath[:]
+
+    # print(path)
+
+    start_point = path[len(path)-2]
+    destination_point = path[len(path)-1]
+
+    old_obstacle=[]
+    if len(path)>2:
+        #retrieve previous obstacle
+        old_obstacle = obstacles[len(obstacles)-1]
+        obstacles.pop(len(obstacles)-1)
+
+    obstacle_to_avoid = []
+    obstacle_dist = 0
+    intersection = []
+
+    my_random = random.randint(0, 1)
+
+    #find obstacle to avoid
+    for obstacle in obstacles:
+
+        if (does_intersect(start_point,destination_point,obstacle)):
+            if obstacle_to_avoid == []:
+                obstacle_to_avoid = obstacle
+                intersection = min_intersect(start_point,destination_point,obstacle)
+                obstacle_dist = calc_dist([start_point,intersection[0]])
+
+                # print("\n\nObstacle intialized:"+str(obstacle)+" Does intersect:"+str(does_intersect(start_point,destination_point,obstacle))+" with a dist of "+ str(dist_to_obstacle(start_point,obstacle)) +"\n\n")
+
+            temp_inter = min_intersect(start_point,destination_point,obstacle)
+            if calc_dist([start_point,temp_inter[0]]) < obstacle_dist:
+                # print("\n\nObstacle updated( "+str(obstacle[0])+" ) (old distance ="+str(obstacle_dist)+") new = "+str(dist_to_obstacle(start_point,obstacle)))
+                obstacle_to_avoid = obstacle
+                intersection = temp_inter
+                obstacle_dist = calc_dist([start_point,intersection[0]])
+
+
+
+    if obstacle_to_avoid ==[]:
+        return path
+
+    #if the point found make the path cross keep turning aroung previous obstacle
+    if old_obstacle !=[] and path_intersection(path,intersection[0]):
+        if my_random:
+            next_point = prev_obstacle_point(path[len(path)-2],old_obstacle)
+        else:
+            next_point = next_obstacle_point(path[len(path)-2],old_obstacle)
+
+        #while cross path
+        # temp_count = 0
+        while path_intersection(path,intersection[0]) :
+            # print('cross path')
+            path.insert(len(path)-1,next_point)
+            if my_random:
+                next_point = prev_obstacle_point(next_point,old_obstacle)
+            else:
+                next_point = next_obstacle_point(next_point,old_obstacle)
+            # temp_count = temp_count +1
+            # # if temp_count > len(old_obstacle):
+            # #     return path
+        #whiile point isnt reachable
+        while (not can_reach_obstacle_point(destination_point,path[len(path)-2],old_obstacle)):
+            # print('not reachable')
+            path.insert(len(path)-1,next_point)
+
+            if my_random:
+                next_point = prev_obstacle_point(next_point,old_obstacle)
+            else:
+                next_point = next_obstacle_point(next_point,old_obstacle)
+
+    #first we connect to the point of intersection
+    path.insert(len(path)-1,intersection[0])
+    #then we join the corner
+
+    if my_random:
+        path.insert(len(path)-1,prev_obstacle_point(obstacle_to_avoid[intersection[1]],obstacle_to_avoid))
+    else:
+        path.insert(len(path)-1,next_obstacle_point(obstacle_to_avoid[intersection[1]],obstacle_to_avoid))
+
+    if my_random:
+        next_point = prev_obstacle_point(path[len(path)-2],obstacle_to_avoid)
+    else:
+        next_point = next_obstacle_point(path[len(path)-2],obstacle_to_avoid)
+
+    #we follow wall while it can't reach obstacle
+    while (not can_reach_obstacle_point(destination_point,path[len(path)-2],obstacle_to_avoid)):
+        # print('cant reach')
+        path.insert(len(path)-1,next_point)
+        if my_random:
+            next_point = prev_obstacle_point(next_point,obstacle_to_avoid)
+        else:
+            next_point = next_obstacle_point(next_point,obstacle_to_avoid)
+
+
+    #obstacle has been passed know we need to do the same thing for the next obstacle
+    remaining_obstacles = obstacles[:]
+    remaining_obstacles.remove(obstacle_to_avoid)
+    remaining_obstacles.append(obstacle_to_avoid)
+
+    # print("remaining_obstacles:"+str(remaining_obstacles))
+    # print("Path:"+str(path))
+
+    return checkPath(path, remaining_obstacles)
+
+
+
+def checkPathRight(mypath, obstacles):
+
+    # print("New Obstacle")
+    path = mypath[:]
+
+    # print(path)
+
+    start_point = path[len(path)-2]
+    destination_point = path[len(path)-1]
+
+    old_obstacle=[]
+    if len(path)>2:
+        #retrieve previous obstacle
+        old_obstacle = obstacles[len(obstacles)-1]
+        obstacles.pop(len(obstacles)-1)
+
+    obstacle_to_avoid = []
+    obstacle_dist = 0
+    intersection = []
+
+    #find obstacle to avoid
+    for obstacle in obstacles:
+
+        if (does_intersect(start_point,destination_point,obstacle)):
+            if obstacle_to_avoid == []:
+                obstacle_to_avoid = obstacle
+                intersection = min_intersect(start_point,destination_point,obstacle)
+                obstacle_dist = calc_dist([start_point,intersection[0]])
+
+                # print("\n\nObstacle intialized:"+str(obstacle)+" Does intersect:"+str(does_intersect(start_point,destination_point,obstacle))+" with a dist of "+ str(dist_to_obstacle(start_point,obstacle)) +"\n\n")
+
+            temp_inter = min_intersect(start_point,destination_point,obstacle)
+            if calc_dist([start_point,temp_inter[0]]) < obstacle_dist:
+                # print("\n\nObstacle updated( "+str(obstacle[0])+" ) (old distance ="+str(obstacle_dist)+") new = "+str(dist_to_obstacle(start_point,obstacle)))
+                obstacle_to_avoid = obstacle
+                intersection = temp_inter
+                obstacle_dist = calc_dist([start_point,intersection[0]])
+
+
+
+    if obstacle_to_avoid ==[]:
+        return path
+
+    #if the point found make the path cross keep turning aroung previous obstacle
+    if old_obstacle !=[] and path_intersection(path,intersection[0]):
+        next_point = prev_obstacle_point(path[len(path)-2],old_obstacle)
+
+
+        # temp_count = 0
+        #while cross path
+        while path_intersection(path,intersection[0]) :
+            print('cross path')
+            path.insert(len(path)-1,next_point)
+            next_point = prev_obstacle_point(next_point,old_obstacle)
+            # temp_count = temp_count +1
+            # if temp_count > len(old_obstacle):
+            #     return path
+        #whiile point isnt reachable
+        while (not can_reach_obstacle_point(destination_point,path[len(path)-2],old_obstacle)):
+            # print('not reachable')
+            path.insert(len(path)-1,next_point)
+            next_point = prev_obstacle_point(next_point,old_obstacle)
+
+    #first we connect to the point of intersection
+    path.insert(len(path)-1,intersection[0])
+    #then we join the corner
+    path.insert(len(path)-1,prev_obstacle_point(obstacle_to_avoid[intersection[1]],obstacle_to_avoid))
+    next_point = prev_obstacle_point(path[len(path)-2],obstacle_to_avoid)
+
+    #we follow wall while it can't reach obstacle
+    while (not can_reach_obstacle_point(destination_point,path[len(path)-2],obstacle_to_avoid)):
+        # print('cant reach')
+        path.insert(len(path)-1,next_point)
+        next_point = prev_obstacle_point(next_point,obstacle_to_avoid)
+
+    #obstacle has been passed know we need to do the same thing for the next obstacle
+    remaining_obstacles = obstacles[:]
+    remaining_obstacles.remove(obstacle_to_avoid)
+    remaining_obstacles.append(obstacle_to_avoid)
+
+    # print("remaining_obstacles:"+str(remaining_obstacles))
+    # print("Path:"+str(path))
+
+    return checkPath(path, remaining_obstacles)
+
+
 def checkPath(mypath, obstacles):
 
     # print("New Obstacle")
@@ -239,15 +447,19 @@ def checkPath(mypath, obstacles):
         next_point = next_obstacle_point(path[len(path)-2],old_obstacle)
 
         #while cross path
+        # temp_count = 0
         while path_intersection(path,intersection[0]) :
-             path.insert(len(path)-1,next_point)
-             next_point = next_obstacle_point(next_point,old_obstacle)
-        #whiile point isnt reachable
-        while (not can_reach_obstacle_point(destination_point,path[len(path)-2],old_obstacle)):
+            print('cross path')
             path.insert(len(path)-1,next_point)
             next_point = next_obstacle_point(next_point,old_obstacle)
-
-
+            # temp_count = temp_count +1
+            # if temp_count > len(old_obstacle):
+            #     return path
+        #whiile point isnt reachable
+        while (not can_reach_obstacle_point(destination_point,path[len(path)-2],old_obstacle)):
+            print('not reachable')
+            path.insert(len(path)-1,next_point)
+            next_point = next_obstacle_point(next_point,old_obstacle)
 
     #first we connect to the point of intersection
     path.insert(len(path)-1,intersection[0])
@@ -255,8 +467,9 @@ def checkPath(mypath, obstacles):
     path.insert(len(path)-1,next_obstacle_point(obstacle_to_avoid[intersection[1]],obstacle_to_avoid))
     next_point = next_obstacle_point(path[len(path)-2],obstacle_to_avoid)
 
-    #we follow wall
+    #we follow wall while it can't reach obstacle
     while (not can_reach_obstacle_point(destination_point,path[len(path)-2],obstacle_to_avoid)):
+        # print('cant reach')
         path.insert(len(path)-1,next_point)
         next_point = next_obstacle_point(next_point,obstacle_to_avoid)
 
@@ -287,8 +500,8 @@ def main():
     outputw.write(lines[0])
     outputw.write(lines[1])
 
-    first = 1
-    last = 5
+    first = 14
+    last = 14
     for jump in range(1,first):
         text = f.readline()
 
@@ -353,8 +566,20 @@ def main():
             for index_j in range(index_i+1,len(points)):
                 if paths[index_i][index_j]!=[()]:
                     # For this path find closest intersection
-                    paths[index_i][index_j] = checkPath(paths[index_i][index_j],obstacles)
-                    # print(paths[index_i][index_j])
+                    paths[index_i][index_j] = checkPathRight(paths[index_i][index_j],obstacles)
+
+                    # tempalternate = checkPathAlternate(paths[index_i][index_j],obstacles)
+                    # tempRight = checkPathRight(paths[index_i][index_j],obstacles)
+                    # tempLeft = checkPath(paths[index_i][index_j],obstacles)
+                    #
+                    # if calc_dist(tempalternate)<calc_dist(tempRight) and calc_dist(tempalternate)<calc_dist(tempLeft):
+                    #     paths[index_i][index_j] = tempalternate
+                    #
+                    # elif calc_dist(tempRight)<calc_dist(tempalternate) and calc_dist(tempRight)<calc_dist(tempLeft):
+                    #     paths[index_i][index_j] = tempRight
+                    #
+                    # else:
+                    #     paths[index_i][index_j] = tempLeft
 
                     paths[index_j][index_i] = paths[index_i][index_j][:]
                     paths[index_j][index_i].reverse()
