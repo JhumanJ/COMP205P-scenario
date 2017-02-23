@@ -1,5 +1,5 @@
 #Imports
-import ast, math, os
+import ast, math, os, time
 import matplotlib.pyplot as plt
 
 # -------------------- ROBOT PATH GENERATION -----------------------
@@ -43,8 +43,12 @@ def algorithm(matrix):
 
     listOfAwakenedRobots[0] = 0
 
-    for row in range(len(paths)-1): #It covers all the nodes in the graph not counting the return to start node
+    print("Len paths: "+str(len(paths)))
+    counter = 0
 
+    for row in range(len(paths)-1): #It covers all the nodes in the graph not counting the return to start node
+        print("Algorithm Step: "+str(counter)+"/"+str(len(paths)))
+        counter = counter + 1
         shortestEdge = [(0,0),(0,0)]
         botNumber = -1
         my_from = -1
@@ -281,7 +285,13 @@ def main():
     outputw.write(lines[0])
     outputw.write(lines[1])
 
-    for problem in range (1,31):
+    first = 26
+    last = 26
+    for jump in range(1,first):
+        text = f.readline()
+
+    for problem in range (first,last+1):
+        start_time = time.time()
         text = f.readline().partition("\n")[0]
         text = text.partition(": ")[2]
         text = text.partition("#")
@@ -308,7 +318,7 @@ def main():
 
 
         # Display info
-        print('\nGraph '+str(problem)+':')
+        print('\nGraph '+str(problem)+'.')
         # print("Points ("+str(len(points))+"): " + str(points))
         # print("Obstacles ("+str(len(obstacles))+"): " + str(obstacles))
         # print("MATRIX:\n")
@@ -334,6 +344,9 @@ def main():
 
 
         # Intersections handler / checkpath
+        status = (len(points)**2)/2
+        counter = 0
+
         for index_i in range(0,len(points)):
             for index_j in range(index_i+1,len(points)):
                 if paths[index_i][index_j]!=[()]:
@@ -344,8 +357,14 @@ def main():
                     paths[index_j][index_i] = paths[index_i][index_j][:]
                     paths[index_j][index_i].reverse()
 
+                    print("Optimize paths: "+str(counter)+"/"+str(status))
+                    counter = counter + 1
+
         #     print(paths[index_i])
         # print "\n\n"
+
+        print("--Optimized matrix execution time:" + str(time.time() - start_time))
+
 
         #----------------------Vizualization------------------------
         fig=plt.figure()
@@ -405,6 +424,9 @@ def main():
         outputw.seek(-1, os.SEEK_END)
         outputw.truncate()
         outputw.write("\n")
+
+        print("--Total execution time: " + str(time.time() - start_time) + "sec.")
+
 
     #close input
     outputw.close()
