@@ -196,6 +196,8 @@ def checkPath(mypath, obstacles):
     # print("New Obstacle")
     path = mypath[:]
 
+    # print(path)
+
     start_point = path[len(path)-2]
     destination_point = path[len(path)-1]
 
@@ -285,8 +287,8 @@ def main():
     outputw.write(lines[0])
     outputw.write(lines[1])
 
-    first = 26
-    last = 26
+    first = 1
+    last = 5
     for jump in range(1,first):
         text = f.readline()
 
